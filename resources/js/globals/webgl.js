@@ -38,7 +38,6 @@ global.VertexAttrib = function (data, size = 2) {
 
 function loadImageAndCreateTextureInfo(gl, url, vue) {
     vue.loading++;
-    console.log(vue.loading);
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
     // Fill the texture with a 1x1 blue pixel.
@@ -62,10 +61,7 @@ function loadImageAndCreateTextureInfo(gl, url, vue) {
 
         gl.bindTexture(gl.TEXTURE_2D, textureInfo.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-        setTimeout(() => {
-            vue.loading--;
-            console.log(vue.loading);
-        }, 1000);
+        vue.loading--;
     });
     img.src = url;
 
@@ -75,7 +71,6 @@ global.newAttributeArray = function (value, size = 2) {
     return new Proxy(new AttributeArray(value, size),
         {
             apply: function (target, thisArg, argumentsList) {
-                console.log('ENTROO');
                 const response = thisArg[target].apply(this, argumentList);
                 if (target !== 'bind' || target !== 'update') {
                     thisArg.rebind = true;
