@@ -36,7 +36,9 @@ global.VertexAttrib = function (data, size = 2) {
     return data;
 }
 
-function loadImageAndCreateTextureInfo(gl, url) {
+function loadImageAndCreateTextureInfo(gl, url, vue) {
+    vue.loading++;
+    console.log(vue.loading);
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
     // Fill the texture with a 1x1 blue pixel.
@@ -60,6 +62,10 @@ function loadImageAndCreateTextureInfo(gl, url) {
 
         gl.bindTexture(gl.TEXTURE_2D, textureInfo.texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        setTimeout(() => {
+            vue.loading--;
+            console.log(vue.loading);
+        }, 1000);
     });
     img.src = url;
 
@@ -153,8 +159,8 @@ class UniformSampler2DVariable0 {
         this.data = value;
         this.tex = null;
     }
-    bind(gl, shaderProgram, name) {
-        this.tex = loadImageAndCreateTextureInfo(gl, this.data.url);
+    bind(gl, shaderProgram, name, vue) {
+        this.tex = loadImageAndCreateTextureInfo(gl, this.data.url, vue);
         this.location = gl.getUniformLocation(shaderProgram, name);
         gl.bindTexture(gl.TEXTURE_2D, this.tex.texture);
         gl.uniform1i(this.location, 0);

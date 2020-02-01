@@ -3,6 +3,8 @@ export default {
     data() {
         return {
             gl: null,
+            loading: 0,
+            shaderProgram: null,
             attributes: {
             },
             variables: {
@@ -14,13 +16,19 @@ export default {
     mounted() {
         this.gl = this.$el.getContext("webgl", { alpha: true });
 
-        const shaderProgram = this.buildShaderProgram();
+        this.shaderProgram = this.buildShaderProgram();
 
-        this.gl.useProgram(shaderProgram);
-        this.bindAttributes(shaderProgram);
-        this.bindVariables(shaderProgram);
-
-        this.animateScene(shaderProgram);
+        this.gl.useProgram(this.shaderProgram);
+        this.bindAttributes(this.shaderProgram);
+        this.bindVariables(this.shaderProgram);
+    },
+    watch: {
+        loading(loading) {
+            if (loading === 0) {
+                this.loadScenario();
+                this.animateScene(this.shaderProgram);
+            }
+        }
     },
     methods: {
         buildShaderProgram() {
@@ -72,7 +80,7 @@ export default {
         },
         bindAttributes(shaderProgram) {
             Object.keys(this.attributes).forEach(name => {
-                this.attributes[name].bind(this.gl, shaderProgram, name);
+                this.attributes[name].bind(this.gl, shaderProgram, name, this);
             });
         },
         updateAttributesValues() {
@@ -82,7 +90,7 @@ export default {
         },
         bindVariables(shaderProgram) {
             Object.keys(this.variables).forEach(name => {
-                this.variables[name].bind(this.gl, shaderProgram, name);
+                this.variables[name].bind(this.gl, shaderProgram, name, this);
             });
         },
         updateVariablesValues() {
