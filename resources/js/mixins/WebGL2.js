@@ -12,7 +12,7 @@ export default {
         };
     },
     mounted() {
-        this.gl = this.$el.getContext("webgl");
+        this.gl = this.$el.getContext("webgl", { alpha: true });
 
         const shaderProgram = this.buildShaderProgram();
 

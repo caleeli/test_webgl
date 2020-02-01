@@ -32,10 +32,10 @@ export default {
         ])
       },
       variables: {
-        u_matrix: new UniformMat4Variable(this.getMatrix(0, 0, 18, 16)),
+        u_matrix: new UniformMat4Variable(this.getMatrix(0, 0, 18 * 2, 16 * 2)),
         u_texture: new UniformSampler2DVariable({
           url: require("../../textures/defenzaciudad.png")
-        }),
+        })
       },
       map: {
         helicopter: [
@@ -83,8 +83,8 @@ export default {
     createSprite(count = 1) {
       let x,
         y,
-        w = 1.8,
-        h = 1.6;
+        w = 1,
+        h = 1;
       for (let i = 0; i < count; i++) {
         x = Math.random() * 55;
         y = Math.random() * 55;
@@ -203,7 +203,7 @@ export default {
       i++;
       this.attributes.a_position.set(i, this.attributes.a_position[i] + vy);
 
-      const j = this.j % this.map.helicopter.length;
+      const j = (this.j + s) % this.map.helicopter.length;
       const tw =
         (this.map.helicopter[j].w / this.variables.u_texture.tex.width) *
         txSize;
