@@ -5,8 +5,8 @@
 <script>
 const m4 = require("../globals/m4.js");
 import WebgGL from "../mixins/WebGL2";
-const sprites = 1;
-
+const sprites = 1000;
+const txSize = 8;
 export default {
   mixins: [WebgGL],
   props: {
@@ -21,6 +21,7 @@ export default {
   },
   data() {
     return {
+      j: 0,
       ////
       attributes: {
         a_position: new AttributeArray([
@@ -31,10 +32,10 @@ export default {
         ])
       },
       variables: {
-        u_matrix: new UniformMat4Variable(this.getMatrix(0, 0, 32, 32)),
+        u_matrix: new UniformMat4Variable(this.getMatrix(0, 0, 18, 16)),
         u_texture: new UniformSampler2DVariable({
           url: require("../../textures/defenzaciudad.png")
-        })
+        }),
       },
       map: {
         helicopter: [
@@ -65,27 +66,28 @@ export default {
 
         uniform sampler2D u_texture;
 
+        float random(){
+            return fract(sin(dot(v_texcoord.xy ,vec2(12.9898,78.233))) * 43758.5453);
+        }
+
         void main() {
+            float rand = random();
             vec4 color = texture2D(u_texture, v_texcoord);
-            if ( color.a < 0.5 ) discard ;
+            if ( color.a < rand ) discard ;
             gl_FragColor = color ;
         }
       `
     };
   },
   methods: {
-    createSprite(
-      count = 1,
-      x = Math.random() * 55,
-      y = Math.random() * 55,
-      w = 1 + Math.random() * 4,
-      h = 1 + Math.random() * 4,
-      t = Math.floor(Math.random() * 9)
-    ) {
+    createSprite(count = 1) {
+      let x,
+        y,
+        w = 1.8,
+        h = 1.6;
       for (let i = 0; i < count; i++) {
         x = Math.random() * 55;
         y = Math.random() * 55;
-        t = Math.floor(Math.random() * 9);
         this.attributes.a_position.push(
           //0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 1
           x,
@@ -101,15 +103,18 @@ export default {
           x + w,
           y + h
         );
-        /*const tw =
-          this.map.helicopter[0].w / this.variables.u_texture.tex.width;
+        const tw =
+          (this.map.helicopter[0].w / this.variables.u_texture.tex.width) *
+          txSize;
         const th =
-          this.map.helicopter[0].h / this.variables.u_texture.tex.height;
+          (this.map.helicopter[0].h / this.variables.u_texture.tex.height) *
+          txSize;
         const tx =
-          this.map.helicopter[0].x / this.variables.u_texture.tex.width;
+          (this.map.helicopter[0].x / this.variables.u_texture.tex.width) *
+          txSize;
         const ty =
-          this.map.helicopter[0].y / this.variables.u_texture.tex.height;*/
-        const tx=0,ty=0,tw=0.5,th=0.5;
+          (this.map.helicopter[0].y / this.variables.u_texture.tex.height) *
+          txSize;
         this.attributes.a_texcoord.push(
           tx,
           ty,
@@ -198,12 +203,19 @@ export default {
       i++;
       this.attributes.a_position.set(i, this.attributes.a_position[i] + vy);
 
-      /*const tw = this.map.helicopter[0].w / this.variables.u_texture.tex.width;
-      const th = this.map.helicopter[0].h / this.variables.u_texture.tex.height;
-      const tx = this.map.helicopter[0].x / this.variables.u_texture.tex.width;
-      const ty = this.map.helicopter[0].y / this.variables.u_texture.tex.height;*/
-      /*const tx=0,ty=0,tw=0.5,th=0.5;
-      //console.log(tx,ty,tw,th);
+      const j = this.j % this.map.helicopter.length;
+      const tw =
+        (this.map.helicopter[j].w / this.variables.u_texture.tex.width) *
+        txSize;
+      const th =
+        (this.map.helicopter[j].h / this.variables.u_texture.tex.height) *
+        txSize;
+      const tx =
+        (this.map.helicopter[j].x / this.variables.u_texture.tex.width) *
+        txSize;
+      const ty =
+        (this.map.helicopter[j].y / this.variables.u_texture.tex.height) *
+        txSize;
       i = s * 12;
       this.attributes.a_texcoord.set(i++, tx);
       this.attributes.a_texcoord.set(i++, ty);
@@ -216,7 +228,7 @@ export default {
       this.attributes.a_texcoord.set(i++, tx);
       this.attributes.a_texcoord.set(i++, ty + th);
       this.attributes.a_texcoord.set(i++, tx + tw);
-      this.attributes.a_texcoord.set(i++, ty + th);*/
+      this.attributes.a_texcoord.set(i++, ty + th);
     },
     getMatrix(x, y, w, h) {
       // this matrix will convert from pixels to clip space
@@ -235,11 +247,13 @@ export default {
         this.moveSprite(i);
       }
       this.updateAttributesValues();
+      this.updateVariablesValues();
       this.gl.drawArrays(
         this.gl.TRIANGLES,
         0,
         this.attributes.a_position.count
       );
+      this.j++;
     }
   },
   mounted() {

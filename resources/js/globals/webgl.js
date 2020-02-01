@@ -49,8 +49,8 @@ function loadImageAndCreateTextureInfo(gl, url) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 
     var textureInfo = {
-        width: 1,   // we don't know the size until it loads
-        height: 1,
+        width: 450,   // we don't know the size until it loads
+        height: 122,
         texture: tex,
     };
     var img = new Image();
@@ -164,3 +164,16 @@ class UniformSampler2DVariable0 {
     }
 }
 global.UniformSampler2DVariable = UniformSampler2DVariable0;
+class UniformFloat {
+    constructor(value) {
+        this.data = value;
+    }
+    bind(gl, shaderProgram, name) {
+        this.location = gl.getUniformLocation(shaderProgram, name);
+        gl.uniform1f(this.location, this.data);
+    }
+    update(gl) {
+        gl.uniform1f(this.location, this.data);
+    }
+}
+global.UniformFloat = UniformFloat;
