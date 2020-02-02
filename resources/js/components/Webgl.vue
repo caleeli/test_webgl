@@ -36,6 +36,7 @@ export default {
           url: require("../../textures/defenzaciudad.png")
         })
       },
+      angle: [],
       size: [],
       sprites: [],
       vertex_shader: `
@@ -46,7 +47,13 @@ export default {
         varying vec2 v_texcoord;
 
         void main() {
-            gl_Position = u_matrix * a_position;
+            float fRotation = 0.01;
+            float c = cos(fRotation);
+            float s = sin(fRotation);
+
+            vec4 uPosition = u_matrix * a_position;
+
+            gl_Position = uPosition;
             v_texcoord = a_texcoord;
         }
       `,
@@ -65,7 +72,7 @@ export default {
         void main() {
             //float rand = random();
             vec4 color = texture2D(u_texture, v_texcoord);
-            if ( color.a < 0.5 ) discard ;
+            if ( color.a < 0.1 ) discard ;
             gl_FragColor = color ;
         }
       `
@@ -84,66 +91,46 @@ export default {
       for (let i = 0; i < count; i++) {
         x = Math.random() * xx;
         y = Math.random() * yy;
-        this.attributes.a_position.push(
-          x,
-          y,
-          x,
-          y + h,
-          x + w,
-          y,
-          x + w,
-          y,
-          x,
-          y + h,
-          x + w,
-          y + h
-        );
-        const tw = (sprite[0].w / this.variables.u_texture.tex.width) * txSize;
-        const th = (sprite[0].h / this.variables.u_texture.tex.height) * txSize;
-        const tx = (sprite[0].x / this.variables.u_texture.tex.width) * txSize;
-        const ty = (sprite[0].y / this.variables.u_texture.tex.height) * txSize;
-        this.sprites.push(sprite);
-        this.size.push({ w, h });
-        this.attributes.a_texcoord.push(
-          tx,
-          ty,
-          tx,
-          ty + th,
-          tx + tw,
-          ty,
-          tx + tw,
-          ty,
-          tx,
-          ty + th,
-          tx + tw,
-          ty + th
-        );
+        let a = Math.random() * Math.PI;
+        this.createSpriteBase(sprite, x, y, w, h, a);
       }
       this.attributes.a_position.syncData();
       this.attributes.a_texcoord.syncData();
     },
-    createSprite(sprite, x = 0, y = 0, w, h) {
+    createSprite(sprite, x = 0, y = 0, w, h, a = 0) {
       w = w === undefined ? sprite[0].w : w;
       h = h === undefined ? sprite[0].h : h;
+      this.createSpriteBase(sprite, x, y, w, h, a);
+      this.attributes.a_position.syncData();
+      this.attributes.a_texcoord.syncData();
+    },
+    createSpriteBase(sprite, x, y, w, h, a) {
+      const cos = Math.cos(a) * 0.5;
+      const sin = Math.sin(a) * 0.5;
+      const wcos = w * cos;
+      const wsin = w * sin;
+      const hcos = h * cos;
+      const hsin = h * sin;
       this.attributes.a_position.push(
-        x,
-        y,
-        x,
-        y + h,
-        x + w,
-        y,
-        x + w,
-        y,
-        x,
-        y + h,
-        x + w,
-        y + h
+        x + (-wcos - hsin),
+        y - (hcos - wsin),
+        x + (-wcos + hsin),
+        y - (-hcos - wsin),
+        x + (wcos - hsin),
+        y - (hcos + wsin),
+        x + (wcos - hsin),
+        y - (hcos + wsin),
+        x + (-wcos + hsin),
+        y - (-hcos - wsin),
+        x + (wcos + hsin),
+        y - (-hcos + wsin)
       );
       const tw = (sprite[0].w / this.variables.u_texture.tex.width) * txSize;
       const th = (sprite[0].h / this.variables.u_texture.tex.height) * txSize;
       const tx = (sprite[0].x / this.variables.u_texture.tex.width) * txSize;
       const ty = (sprite[0].y / this.variables.u_texture.tex.height) * txSize;
       this.sprites.push(sprite);
+      this.angle.push(a);
       this.size.push({ w, h });
       this.attributes.a_texcoord.push(
         tx,
@@ -159,29 +146,35 @@ export default {
         tx + tw,
         ty + th
       );
-      this.attributes.a_position.syncData();
-      this.attributes.a_texcoord.syncData();
     },
     teleportSprite(
       s = 0,
       x = (Math.random() - 0.5) * 35,
-      y = Math.random() * 5
+      y = Math.random() * 5,
+      a
     ) {
       let i = s * 12;
       let w = this.size[s].w;
       let h = this.size[s].h;
-      this.attributes.a_position.set(i++, x);
-      this.attributes.a_position.set(i++, y);
-      this.attributes.a_position.set(i++, x);
-      this.attributes.a_position.set(i++, y + h);
-      this.attributes.a_position.set(i++, x + w);
-      this.attributes.a_position.set(i++, y);
-      this.attributes.a_position.set(i++, x + w);
-      this.attributes.a_position.set(i++, y);
-      this.attributes.a_position.set(i++, x);
-      this.attributes.a_position.set(i++, y + h);
-      this.attributes.a_position.set(i++, x + w);
-      this.attributes.a_position.set(i++, y + h);
+      a = a === undefined ? this.angle[s] : a;
+      const cos = Math.cos(a) * 0.5;
+      const sin = Math.sin(a) * 0.5;
+      const wcos = w * cos;
+      const wsin = w * sin;
+      const hcos = h * cos;
+      const hsin = h * sin;
+      this.attributes.a_position.set(i++, x + (-wcos - hsin));
+      this.attributes.a_position.set(i++, y - (hcos - wsin));
+      this.attributes.a_position.set(i++, x + (-wcos + hsin));
+      this.attributes.a_position.set(i++, y - (-hcos - wsin));
+      this.attributes.a_position.set(i++, x + (wcos - hsin));
+      this.attributes.a_position.set(i++, y - (hcos + wsin));
+      this.attributes.a_position.set(i++, x + (wcos - hsin));
+      this.attributes.a_position.set(i++, y - (hcos + wsin));
+      this.attributes.a_position.set(i++, x + (-wcos + hsin));
+      this.attributes.a_position.set(i++, y - (-hcos - wsin));
+      this.attributes.a_position.set(i++, x + (wcos + hsin));
+      this.attributes.a_position.set(i++, y - (-hcos + wsin));
     },
     moveSprite(
       s = 0,
@@ -258,6 +251,7 @@ export default {
     },
     getMatrix(x, y, w, h) {
       var matrix = m4.orthographic(0, this.width, this.height, 0, -1, 1);
+      //matrix = m4.multiply(matrix, [0, 1, 0, -1, 0, 0, 0, 0, 1]);
       matrix = m4.translate(matrix, x, y, 0);
       matrix = m4.scale(matrix, w, h, 1);
       return matrix;

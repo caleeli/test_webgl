@@ -31,6 +31,8 @@ export default {
   mixins: [window.workflowMixin],
   data() {
     return {
+      prevX: 0,
+      prevY: 0,
       world: require("../../textures/place.png"),
       map: {
         helicopter: [
@@ -50,7 +52,8 @@ export default {
           { x: 256, y: 0, w: 64, h: 64 },
           { x: 320, y: 0, w: 64, h: 64 },
           { x: 384, y: 0, w: 64, h: 64 }
-        ]
+        ],
+        house: [{ x: 0, y: 80, w: 48, h: 32, speed: 0.01, sx: 16, sy: 16 }]
       },
       selected: -1
     };
@@ -83,8 +86,14 @@ export default {
       const y =
         Math.round((event.offsetY - scenario.size[c].h * 0.5) / sprite[0].sy) *
         sprite[0].sy;
-      scenario.createSprite(sprite, x, y);
+      const a = Math.atan2(
+        -(event.offsetY - this.prevY),
+        event.offsetX - this.prevX
+      );
+      scenario.createSprite(sprite, x, y, sprite[0].w, sprite[0].h, a);
       this.selected = scenario.sprites.length - 1;
+      this.prevX = event.offsetX;
+      this.prevY = event.offsetY;
     },
     mousemove(event) {
       const scenario = this.$refs.scenario;
@@ -99,8 +108,14 @@ export default {
           Math.round(
             (event.offsetY - scenario.size[c].h * 0.5) / sprite[0].sy
           ) * sprite[0].sy;
-        scenario.teleportSprite(c, x, y);
+        const a = Math.atan2(
+          -(event.offsetY - this.prevY),
+          event.offsetX - this.prevX
+        );
+        scenario.teleportSprite(c, x, y, a);
       }
+      this.prevX = event.offsetX;
+      this.prevY = event.offsetY;
     }
   }
 };

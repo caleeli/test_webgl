@@ -85,7 +85,7 @@ global.newAttributeArray = function (value, size = 2) {
         }
     );
 }
-class AttributeArray0 extends Array {
+class AttributeArray extends Array {
     constructor(value, size = 2) {
         super(...value);
         this.data = new Float32Array(value);
@@ -135,7 +135,7 @@ class AttributeArray0 extends Array {
         this[index] = value;
     };
 }
-global.AttributeArray = AttributeArray0;
+global.AttributeArray = AttributeArray;
 class UniformMat4Variable0 {
     constructor(value) {
         this.data = value;
