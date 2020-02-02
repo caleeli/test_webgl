@@ -165,7 +165,7 @@ class UniformSampler2DVariable0 {
     }
 }
 global.UniformSampler2DVariable = UniformSampler2DVariable0;
-class UniformFloat {
+class UniformFloatVariable {
     constructor(value) {
         this.data = value;
     }
@@ -177,4 +177,4 @@ class UniformFloat {
         gl.uniform1f(this.location, this.data);
     }
 }
-global.UniformFloat = UniformFloat;
+global.UniformFloatVariable = UniformFloatVariable;

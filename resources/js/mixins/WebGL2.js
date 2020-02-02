@@ -14,7 +14,9 @@ export default {
         };
     },
     mounted() {
-        this.gl = this.$el.getContext("webgl", { alpha: true });
+        this.gl = this.$el.getContext("webgl", {
+            alpha: true, premultipliedAlpha: false
+        });
 
         this.shaderProgram = this.buildShaderProgram();
 
