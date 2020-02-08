@@ -5,7 +5,7 @@
 <script>
 const m4 = require("../globals/m4.js");
 import WebgGL from "../mixins/WebGL2";
-const txSize = 8;
+const txSize = 2;
 export default {
   mixins: [WebgGL],
   props: {
@@ -19,6 +19,11 @@ export default {
     },
     map: {
       type: Object
+    },
+    texture: {
+      default() {
+        return require("../../textures/defenzaciudad.png");
+      }
     }
   },
   data() {
@@ -33,7 +38,7 @@ export default {
         u_matrix: new UniformMat4Variable(this.getMatrix(0, 0, 1, 1)),
         rand0: new UniformFloatVariable(Math.random()),
         u_texture: new UniformSampler2DVariable({
-          url: require("../../textures/defenzaciudad.png")
+          url: this.texture
         })
       },
       angle: [],
@@ -97,20 +102,22 @@ export default {
       this.attributes.a_position.syncData();
       this.attributes.a_texcoord.syncData();
     },
-    createSprite(sprite, x = 0, y = 0, w, h, a = 0) {
+    createSprite(sprite, x = 0, y = 0, w, h, a = 0, z = 1) {
       w = w === undefined ? sprite[0].w : w;
       h = h === undefined ? sprite[0].h : h;
-      this.createSpriteBase(sprite, x, y, w, h, a);
+      this.createSpriteBase(sprite, x, y, w, h, a, z);
       this.attributes.a_position.syncData();
       this.attributes.a_texcoord.syncData();
     },
-    createSpriteBase(sprite, x, y, w, h, a) {
+    createSpriteBase(sprite, x, y, w, h, a, z) {
+      a = a === undefined ? sprite[0].a || 0 : a;
+      z = z === undefined ? sprite[0].z || 1 : z;
       const cos = Math.cos(a) * 0.5;
       const sin = Math.sin(a) * 0.5;
-      const wcos = w * cos;
-      const wsin = w * sin;
-      const hcos = h * cos;
-      const hsin = h * sin;
+      const wcos = w * cos * z;
+      const wsin = w * sin * z;
+      const hcos = h * cos * z;
+      const hsin = h * sin * z;
       this.attributes.a_position.push(
         x + (-wcos - hsin),
         y - (hcos - wsin),
@@ -131,7 +138,7 @@ export default {
       const ty = (sprite[0].y / this.variables.u_texture.tex.height) * txSize;
       this.sprites.push(sprite);
       this.angle.push(a);
-      this.size.push({ w, h });
+      this.size.push({ x, y, w, h, z });
       this.attributes.a_texcoord.push(
         tx,
         ty,
@@ -147,22 +154,20 @@ export default {
         ty + th
       );
     },
-    teleportSprite(
-      s = 0,
-      x = (Math.random() - 0.5) * 35,
-      y = Math.random() * 5,
-      a
-    ) {
+    teleportSprite(s = 0, x, y, a, z) {
       let i = s * 12;
       let w = this.size[s].w;
       let h = this.size[s].h;
-      a = a === undefined ? this.angle[s] : a;
+      this.size[s].x = x = x === undefined ? this.size[s].x : x;
+      this.size[s].y = y = y === undefined ? this.size[s].y : y;
+      this.angle[s] = a = a === undefined ? this.angle[s] : a;
+      this.size[s].z = z = z === undefined ? this.size[s].z : z;
       const cos = Math.cos(a) * 0.5;
       const sin = Math.sin(a) * 0.5;
-      const wcos = w * cos;
-      const wsin = w * sin;
-      const hcos = h * cos;
-      const hsin = h * sin;
+      const wcos = w * cos * z;
+      const wsin = w * sin * z;
+      const hcos = h * cos * z;
+      const hsin = h * sin * z;
       this.attributes.a_position.set(i++, x + (-wcos - hsin));
       this.attributes.a_position.set(i++, y - (hcos - wsin));
       this.attributes.a_position.set(i++, x + (-wcos + hsin));
@@ -181,6 +186,8 @@ export default {
       vx = (Math.random() - 0.5) * 0.1,
       vy = (Math.random() - 0.5) * 0.1
     ) {
+      this.size[s].x += vx;
+      this.size[s].y += vy;
       let i = s * 12 - 1;
       i++;
       this.attributes.a_position.set(i, this.attributes.a_position[i] + vx);
@@ -209,30 +216,28 @@ export default {
     },
     changeSprite(s, sprite) {
       this.sprites[s] = sprite;
+      this.size[s].w = sprite[0].w;
+      this.size[s].h = sprite[0].h;
+      this.size[s].z = sprite[0].z || 1;
     },
     resizeSprite(s, w, h) {
       this.size[s].w = w;
       this.size[s].h = h;
       let i = s * 12;
-      this.teleportSprite(
-        s,
-        this.attributes.a_position[i],
-        this.attributes.a_position[i + 1]
-      );
+      this.teleportSprite(s);
     },
     animateSprites() {
       for (let s = 0; s < this.sprites.length; s++) {
         const j =
-          (Math.round(this.j * this.sprites[s][0].speed) + s) %
+          (Math.round(this.j * (this.sprites[s][0].speed || 1)) + s) %
           this.sprites[s].length;
-        const tw =
-          (this.sprites[s][j].w / this.variables.u_texture.tex.width) * txSize;
-        const th =
-          (this.sprites[s][j].h / this.variables.u_texture.tex.height) * txSize;
-        const tx =
-          (this.sprites[s][j].x / this.variables.u_texture.tex.width) * txSize;
-        const ty =
-          (this.sprites[s][j].y / this.variables.u_texture.tex.height) * txSize;
+        const sprite = this.sprites[s][j];
+        // Animate texture
+        const tex = this.variables.u_texture.tex;
+        const tw = (sprite.w / tex.width) * txSize;
+        const th = (sprite.h / tex.height) * txSize;
+        const tx = (sprite.x / tex.width) * txSize;
+        const ty = (sprite.y / tex.height) * txSize;
         let i = s * 12;
         this.attributes.a_texcoord.set(i++, tx);
         this.attributes.a_texcoord.set(i++, ty);
@@ -246,6 +251,10 @@ export default {
         this.attributes.a_texcoord.set(i++, ty + th);
         this.attributes.a_texcoord.set(i++, tx + tw);
         this.attributes.a_texcoord.set(i++, ty + th);
+        // Animate zoom and angle
+        if (sprite.z || sprite.a) {
+          this.teleportSprite(s, undefined, undefined, sprite.a, sprite.z);
+        }
       }
       this.j++;
     },

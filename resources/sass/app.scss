@@ -10,6 +10,19 @@
 //Import Font Awesome 5
 @import "~@fortawesome/fontawesome-free/css/all.min.css";
 
+@font-face {
+    font-family: "PerfectDOSVGA437Win";
+    src: url("./fonts/PerfectDOSVGA437Win.eot"); /* IE9 Compat Modes */
+    src: url("./fonts/PerfectDOSVGA437Win.eot?#iefix") format("embedded-opentype"), /* IE6-IE8 */
+      url("./fonts/PerfectDOSVGA437Win.otf") format("opentype"), /* Open Type Font */
+      url("./fonts/PerfectDOSVGA437Win.svg") format("svg"), /* Legacy iOS */
+      url("./fonts/PerfectDOSVGA437Win.ttf") format("truetype"), /* Safari, Android, iOS */
+      url("./fonts/PerfectDOSVGA437Win.woff") format("woff"), /* Modern Browsers */
+      url("./fonts/PerfectDOSVGA437Win.woff2") format("woff2"); /* Modern Browsers */
+    font-weight: normal;
+    font-style: normal;
+}
+
 html, body {
     background-color: #fff;
     color: #636b6f;
