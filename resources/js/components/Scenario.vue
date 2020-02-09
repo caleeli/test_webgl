@@ -23,10 +23,11 @@ export default {
     };
   },
   methods: {
+    tick() {
+      this.$emit("tick");
+    },
     loadScenario() {
       this.$emit("load-scenario");
-      //this.createSprites(40, this.map.factory, 300, 200, 64, 64);
-      //this.createSprites(1, this.map.helicopter, 300, 200);
     },
     ////
     click(event) {

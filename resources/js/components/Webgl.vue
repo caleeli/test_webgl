@@ -28,6 +28,7 @@ export default {
   },
   data() {
     return {
+      nextClockResolve: [],
       j: 0,
       ////
       attributes: {
@@ -77,7 +78,7 @@ export default {
         void main() {
             //float rand = random();
             vec4 color = texture2D(u_texture, v_texcoord);
-            if ( color.a < 0.1 ) discard ;
+            if ( color.a == 0.0 ) discard ;
             gl_FragColor = color ;
         }
       `
@@ -105,11 +106,18 @@ export default {
     createSprite(sprite, x = 0, y = 0, w, h, a = 0, z = 1) {
       w = w === undefined ? sprite[0].w : w;
       h = h === undefined ? sprite[0].h : h;
-      this.createSpriteBase(sprite, x, y, w, h, a, z);
+      const s = this.createSpriteBase(sprite, x, y, w, h, a, z);
+      this.attributes.a_position.syncData();
+      this.attributes.a_texcoord.syncData();
+      return s;
+    },
+    sync() {
       this.attributes.a_position.syncData();
       this.attributes.a_texcoord.syncData();
     },
     createSpriteBase(sprite, x, y, w, h, a, z) {
+      w = w === undefined ? sprite[0].w : w;
+      h = h === undefined ? sprite[0].h : h;
       a = a === undefined ? sprite[0].a || 0 : a;
       z = z === undefined ? sprite[0].z || 1 : z;
       const cos = Math.cos(a) * 0.5;
@@ -138,7 +146,7 @@ export default {
       const ty = (sprite[0].y / this.variables.u_texture.tex.height) * txSize;
       this.sprites.push(sprite);
       this.angle.push(a);
-      this.size.push({ x, y, w, h, z });
+      this.size.push({ x, y, w, h, z, s: 0 });
       this.attributes.a_texcoord.push(
         tx,
         ty,
@@ -153,6 +161,7 @@ export default {
         tx + tw,
         ty + th
       );
+      return this.size.length - 1;
     },
     teleportSprite(s = 0, x, y, a, z) {
       let i = s * 12;
@@ -229,8 +238,9 @@ export default {
     animateSprites() {
       for (let s = 0; s < this.sprites.length; s++) {
         const j =
-          (Math.round(this.j * (this.sprites[s][0].speed || 1)) + s) %
-          this.sprites[s].length;
+          Math.round(
+            this.j * (this.sprites[s][0].speed || 1) + this.size[s].s
+          ) % this.sprites[s].length;
         const sprite = this.sprites[s][j];
         // Animate texture
         const tex = this.variables.u_texture.tex;
@@ -256,7 +266,15 @@ export default {
           this.teleportSprite(s, undefined, undefined, sprite.a, sprite.z);
         }
       }
-      this.j++;
+    },
+    setAnimationPos(s, pos) {
+      this.size[s].s = pos - this.j * (this.sprites[s][0].speed || 1);
+      return {
+        start: this.j,
+        end:
+          this.j +
+          Math.round((this.sprites[s].length -1) / (this.sprites[s][0].speed || 1))
+      };
     },
     getMatrix(x, y, w, h) {
       var matrix = m4.orthographic(0, this.width, this.height, 0, -1, 1);
@@ -266,6 +284,7 @@ export default {
       return matrix;
     },
     animateFrame(shaderProgram, currentTime) {
+      this.clockTick(this.j);
       this.variables.rand0.data = Math.random();
       this.animateSprites();
       this.updateAttributesValues();
@@ -277,8 +296,28 @@ export default {
           this.attributes.a_position.count
         );
       }
+      this.tick();
+      this.j++;
+    },
+    clockTick(j) {
+      for (let i = 0, l = this.nextClockResolve.length; i < l; i++) {
+        const clock = this.nextClockResolve[i];
+        ////
+        if (j >= clock.j) {
+          clock.resolve();
+          this.nextClockResolve.splice(i, 1);
+          i--;
+          l--;
+        }
+      }
+    },
+    clock(j = 0) {
+      return new Promise(resolve => {
+        this.nextClockResolve.push({ resolve, j });
+      });
     },
     loadScenario() {},
+    tick() {},
     ////
     mousemove(event) {}
   }

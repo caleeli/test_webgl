@@ -1,5 +1,11 @@
 let lasttime = 0;
 export default {
+    props: {
+        blend: {
+            type: Boolean,
+            default: true
+        }
+    },
     data() {
         return {
             gl: null,
@@ -17,8 +23,10 @@ export default {
         this.gl = this.$el.getContext("webgl", {
             alpha: true, premultipliedAlpha: false
         });
-        this.gl.enable(this.gl.BLEND);
-        this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        if (this.blend) {
+            this.gl.enable(this.gl.BLEND);
+            this.gl.blendFunc(this.gl.ONE, this.gl.ONE_MINUS_SRC_ALPHA);
+        }
 
         this.shaderProgram = this.buildShaderProgram();
 

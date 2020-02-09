@@ -1,24 +1,13 @@
 <template>
   <div class="editor row w-100 h-100">
-    <div class="col-1 p-0">
-      <input class="form-control" v-model="angle" />
-      <button
-        v-for="sprite in sprites"
-        :key="sprite"
-        class="btn btn-info w-100"
-        type="button"
-        @click="choose(sprite)"
-      >{{ sprite }}</button>
-    </div>
     <div class="col p-0">
       <div class="position-relative" style="width:640px; height:480px;">
         <img class="scenario" :src="world" width="640" />
         <scenario
           ref="scenario"
           class="scenario"
+          :blend="false"
           :texture="texture"
-          @mousemove="mousemove"
-          @click="click"
           @load-scenario="loadScenario"
           @tick="tick"
           :width="640"
@@ -38,46 +27,21 @@ const floor = 480;
 const large = 640;
 
 export default {
-  path: "/editor",
+  path: "/",
   mixins: [window.workflowMixin],
   data() {
     return {
-      angle: "",
+      explosions: [],
+      edificios: [],
       name1: "David",
       name2: "Patricia",
       nextTickResolve: null,
-      gorilla1: -1,
-      gorilla2: -1,
+      gorillas: [],
       banana: -1,
+      explosion1: -1,
       angle: 0,
       prevX: 0,
       prevY: 0,
-      /*world: require("../../textures/place.png"),
-      map: {
-        helicopter: [
-          { x: 0, y: 64, w: 18, h: 16, speed: 1, sx: 8, sy: 8 },
-          { x: 18, y: 64, w: 18, h: 16 },
-          { x: 36, y: 64, w: 18, h: 16 },
-          { x: 54, y: 64, w: 18, h: 16 },
-          { x: 72, y: 64, w: 18, h: 16 },
-          { x: 90, y: 64, w: 18, h: 16 }
-        ],
-        car: [{ x: 140, y: 64, w: 28, h: 16, speed: 1, sx: 8, sy: 8 }],
-        asphalt: [{ x: 228, y: 64, w: 16, h: 16, speed: 1, sx: 8, sy: 8 }],
-        factory: [
-          { x: 0, y: 0, w: 64, h: 64, speed: 0.01, sx: 8, sy: 8 },
-          { x: 64, y: 0, w: 64, h: 64 },
-          { x: 128, y: 0, w: 64, h: 64 },
-          { x: 192, y: 0, w: 64, h: 64 },
-          { x: 256, y: 0, w: 64, h: 64 },
-          { x: 320, y: 0, w: 64, h: 64 },
-          { x: 384, y: 0, w: 64, h: 64 }
-        ],
-        house: [{ x: 0, y: 80, w: 48, h: 32, speed: 0.01, sx: 8, sy: 8 }],
-        building1: [{ x: 448, y: 0, w: 64, h: 64, speed: 0.01, sx: 8, sy: 8 }],
-        building2: [{ x: 512, y: 0, w: 64, h: 64, speed: 0.01, sx: 8, sy: 8 }],
-        building3: [{ x: 576, y: 0, w: 64, h: 64, speed: 0.01, sx: 8, sy: 8 }]
-      },*/
       world: require("../../textures/sky.jpg"),
       texture: require("../../textures/gorilla.png"),
       map: {
@@ -107,26 +71,26 @@ export default {
         edificio8: [{ x: 486, y: 0, w: 70, h: 270, sx: 5, sy: 18 }],
         edificio9: [{ x: 556, y: 0, w: 80, h: 270, sx: 5, sy: 18 }],
         banana: [
-          { x: 636, y: 228, w: 16, h: 16, a: 0.0, sx: 1, sy: 1, speed: 1 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.1 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.2 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.3 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.4 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.5 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.6 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.7 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.8 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 0.9 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.0 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.1 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.2 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.3 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.4 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.5 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.6 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.7 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.8 },
-          { x: 636, y: 228, w: 16, h: 16, a: Math.PI * 1.9 }
+          { x: 668, y: 176, w: 16, h: 16, a: 0.0, sx: 1, sy: 1, speed: 1 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.1 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.2 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.3 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.4 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.5 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.6 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.7 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.8 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 0.9 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.0 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.1 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.2 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.3 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.4 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.5 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.6 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.7 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.8 },
+          { x: 668, y: 176, w: 16, h: 16, a: Math.PI * 1.9 }
         ],
         sol1: [{ x: 636, y: 0, w: 60, h: 60, sx: 4, sy: 4 }],
         sol2: [{ x: 636, y: 60, w: 60, h: 60, sx: 4, sy: 4 }],
@@ -154,7 +118,7 @@ export default {
           { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 1.8, z: 1.0 }
         ],
         explosion1b: [
-          { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 2, z: 1.0, speed: 0.8 },
+          { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 2, z: 1.0, speed: 0.5 },
           { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 1.8, z: 0.9 },
           { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 1.8, z: 0.8 },
           { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 1.8, z: 0.7 },
@@ -165,37 +129,43 @@ export default {
           { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 1.8, z: 0.2 },
           { x: 668, y: 120, w: 28, h: 28, a: Math.PI * 1.8, z: 0.1 }
         ],
+        explosion1End: [
+          { x: 668, y: 148, w: 28, h: 28, a: 0.0, z: 1.0, speed: 1 }
+        ],
         explosion2: [
           {
-            x: 636,
-            y: 276,
+            x: 637,
+            y: 229,
             w: 60,
             h: 44,
             a: 0,
             z: 0.1,
-            speed: 0.5
+            speed: 0.4
           },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.2 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.3 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.4 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.5 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.6 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.7 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.8 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.9 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 1.0 }
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.2 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.3 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.4 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.5 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.6 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.7 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.8 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.9 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 1.0 }
         ],
         explosion2b: [
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 1.0, speed: 0.5 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.9 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.8 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.7 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.6 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.5 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.4 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.3 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.2 },
-          { x: 636, y: 276, w: 60, h: 44, a: 0, z: 0.1 }
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 1.0, speed: 0.8 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.9 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.8 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.7 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.6 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.5 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.4 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.3 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.2 },
+          { x: 637, y: 229, w: 60, h: 44, a: 0, z: 0.1 }
+        ],
+        explosion2End: [
+          { x: 637, y: 273, w: 60, h: 44, a: 0.0, z: 1.0, speed: 1 }
         ]
       },
       selected: -1
@@ -249,16 +219,15 @@ export default {
     },
     crearCiudad(scenario) {
       let x = 0;
-      const edificios = [];
+      const edificios = this.edificios;
       do {
         let pos = this.crearEdificio(scenario, x);
         edificios.push(pos);
         x = pos.x + pos.w;
       } while (x < 640);
-      this.gorilla1 = this.ponerGorila(scenario, edificios[1]);
-      this.gorilla2 = this.ponerGorila(
-        scenario,
-        edificios[edificios.length - 2]
+      this.gorillas.push(
+        this.ponerGorila(scenario, edificios[1]),
+        this.ponerGorila(scenario, edificios[edificios.length - 2])
       );
     },
     loadScenario() {
@@ -271,10 +240,13 @@ export default {
         scenario.map.sol1[0].h,
         0
       );
-      this.banana = scenario.createSpriteBase(scenario.map.banana, 20, 120);
       this.crearCiudad(scenario);
-      scenario.createSpriteBase(scenario.map.sol1, 300, 200);
-      this.selected = scenario.sprites.length - 1;
+      this.banana = scenario.createSpriteBase(scenario.map.banana, -16, -16);
+      this.explosion1 = scenario.createSpriteBase(
+        scenario.map.explosion1,
+        -16,
+        -16
+      );
       scenario.sync();
       this.game();
     },
@@ -283,27 +255,95 @@ export default {
       while (true) {
         const angle = await this.$refs.prompt.ask("Angle");
         const velocity = await this.$refs.prompt.ask("Velocity");
-        await this.lanzarBanana(this[`gorilla${turno + 1}`], angle, velocity);
+        await this.lanzarBanana(
+          this.gorillas[turno],
+          angle,
+          velocity,
+          1 - turno * 2
+        );
         turno = (turno + 1) % 2;
       }
     },
-    async lanzarBanana(gorilla, a, v) {
+    async lanzarBanana(gorilla, a, v, dir) {
       const g = 9.8;
-      const vx = v * Math.cos((a / 180) * Math.PI);
+      const vx = v * Math.cos((a / 180) * Math.PI) * dir;
       const vy = v * Math.sin((a / 180) * Math.PI);
 
       const scenario = this.$refs.scenario;
       const pos = scenario.size[gorilla];
-      const x0 = pos.x - pos.w * 0.5;
+      const x0 = pos.x - pos.w * 0.5 * dir;
       const y0 = pos.y - pos.h * 0.5 - 8;
-      for (let t = 0; t < 10; t += 0.1) {
-        scenario.teleportSprite(
-          this.banana,
-          x0 + t * vx,
-          y0 - (t * vy - 0.5 * g * t * t)
-        );
+      for (let t = 0; t < 20; t += 0.1) {
         await this.nextTick();
+        const x = x0 + t * vx;
+        const y = y0 - (t * vy - 0.5 * g * t * t);
+        // Detección de colisión
+        let choco = false;
+        let exploto = -1;
+        // Detección de colisión con edificios
+        this.edificios.forEach(edificio => {
+          const x1 = edificio.x;
+          const x2 = edificio.x + edificio.w;
+          const y1 = edificio.y;
+          const inAExplosion = this.explosions.find(
+            explo =>
+              Math.sqrt(
+                (explo.x - x) * (explo.x - x) + (explo.y - y) * (explo.y - y)
+              ) <=
+              this.map.explosion1End[0].w * 0.5
+          );
+          choco |= x >= x1 && x <= x2 && y >= y1 && !inAExplosion;
+        });
+        // Detección de colisión con gorilla
+        this.gorillas.forEach((s, i) => {
+          const gorilla = scenario.size[s];
+          const x1 = gorilla.x - gorilla.w * 0.5;
+          const x2 = gorilla.x + gorilla.w * 0.5;
+          const y1 = gorilla.y - gorilla.h * 0.5;
+          const y2 = gorilla.y + gorilla.h * 0.5;
+          if (x >= x1 && x <= x2 && y >= y1 && y <= y2) exploto = i;
+        });
+        // Dibuja explosion o banana
+        if (exploto > -1) {
+          const gorilla = scenario.size[this.gorillas[exploto]];
+          await this.explotar(
+            scenario,
+            gorilla.x,
+            gorilla.y,
+            this.map.explosion2,
+            this.map.explosion2b,
+            this.map.explosion2End
+          );
+          break;
+        } else if (choco) {
+          await this.explotar(
+            scenario,
+            x,
+            y,
+            this.map.explosion1,
+            this.map.explosion1b,
+            this.map.explosion1End
+          );
+          break;
+        } else {
+          scenario.teleportSprite(this.banana, x, y);
+        }
       }
+    },
+    async explotar(scenario, x, y, explo1, explo2, explo3) {
+      let explosion = this.banana;
+      this.explosions.push({ x, y });
+      scenario.teleportSprite(explosion, x, y);
+      scenario.changeSprite(explosion, explo1);
+      const anim = scenario.setAnimationPos(explosion, 0);
+      await scenario.clock(anim.end);
+      scenario.changeSprite(explosion, explo3);
+      this.banana = scenario.createSpriteBase(explo2, x, y);
+      const anim2 = scenario.setAnimationPos(this.banana, 0);
+      scenario.sync();
+      await scenario.clock(anim2.end);
+      scenario.changeSprite(this.banana, this.map.banana);
+      scenario.teleportSprite(this.banana, -16, -16);
     },
     tick() {
       this.nextTickResolve ? this.nextTickResolve() : null;
@@ -313,42 +353,6 @@ export default {
       return new Promise(resolve => {
         this.nextTickResolve = resolve;
       });
-    },
-    choose(spriteName) {
-      const scenario = this.$refs.scenario;
-      const sprite = scenario.map[spriteName];
-      this.selected = scenario.sprites.length - 1;
-      scenario.changeSprite(this.selected, sprite);
-      scenario.resizeSprite(this.selected, sprite[0].w, sprite[0].h);
-    },
-    click(event) {
-      const scenario = this.$refs.scenario;
-      const c = this.selected;
-      const sprite = scenario.sprites[c];
-      const sx = sprite[0].sx || 1;
-      const sy = sprite[0].sy || 1;
-      const x = Math.round(event.offsetX / sx) * sx;
-      const y = Math.round(event.offsetY / sy) * sy;
-      const a = (Math.PI * eval(this.angle)) / 180;
-      scenario.createSprite(sprite, x, y, sprite[0].w, sprite[0].h, a);
-      this.selected = scenario.sprites.length - 1;
-      this.prevX = event.offsetX;
-      this.prevY = event.offsetY;
-    },
-    mousemove(event) {
-      const scenario = this.$refs.scenario;
-      if (scenario.sprites.length && this.selected > -1) {
-        const c = this.selected;
-        const sprite = scenario.sprites[c];
-        const sx = sprite[0].sx || 1;
-        const sy = sprite[0].sy || 1;
-        const x = Math.round(event.offsetX / sx) * sx;
-        const y = Math.round(event.offsetY / sy) * sy;
-        const a = (Math.PI * eval(this.angle)) / 180;
-        scenario.teleportSprite(c, x, y, a);
-      }
-      this.prevX = event.offsetX;
-      this.prevY = event.offsetY;
     }
   }
 };
