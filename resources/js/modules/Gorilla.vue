@@ -1,47 +1,44 @@
 <template>
-  <div class="editor row w-100 h-100">
-    <div class="col p-0">
-      <div class="position-relative" style="width:640px; height:480px;">
-        <img class="scenario" :src="world" width="640" />
-        <scenario
-          ref="scenario"
-          class="scenario"
-          :blend="false"
-          :texture="texture"
-          @load-scenario="loadScenario"
-          @tick="tick"
-          :width="640"
-          :height="480"
-          :map="map"
-        ></scenario>
-        <div class="left">{{ name1 }}</div>
-        <div class="right">{{ name2 }}</div>
-        <prompt ref="prompt" />
-      </div>
+  <div class="editor w-100 h-100">
+    <div class="position-relative" style="width:100%; height:100%;">
+      <img class="scenario" :src="world" style="width: 100%;" />
+      <scenario
+        ref="scenario"
+        class="scenario"
+        :blend="false"
+        :texture="texture"
+        @load-scenario="runGame"
+        @tick="tick"
+        :width="large"
+        :height="floor"
+        :map="map"
+        style="width:100%;"
+      ></scenario>
+      <div class="left">{{ names[0] }}</div>
+      <div class="right">{{ names[1] }}</div>
+      <prompt ref="prompt" />
     </div>
   </div>
 </template>
 
 <script>
 const floor = 480;
-const large = 640;
+const large = 720;
 
 export default {
   path: "/",
   mixins: [window.workflowMixin],
   data() {
     return {
+      large,
+      floor,
       explosions: [],
       edificios: [],
-      name1: "David",
-      name2: "Patricia",
+      names: ["David", "Patricia"],
       nextTickResolve: null,
       gorillas: [],
       banana: -1,
       explosion1: -1,
-      angle: 0,
-      prevX: 0,
-      prevY: 0,
       world: require("../../textures/sky.jpg"),
       texture: require("../../textures/gorilla.png"),
       map: {
@@ -224,14 +221,15 @@ export default {
         let pos = this.crearEdificio(scenario, x);
         edificios.push(pos);
         x = pos.x + pos.w;
-      } while (x < 640);
+      } while (x < large);
       this.gorillas.push(
         this.ponerGorila(scenario, edificios[1]),
         this.ponerGorila(scenario, edificios[edificios.length - 2])
       );
     },
-    loadScenario() {
+    buildScenario() {
       const scenario = this.$refs.scenario;
+      // place sun
       scenario.createSpriteBase(
         scenario.map.sol1,
         large * 0.5,
@@ -248,14 +246,26 @@ export default {
         -16
       );
       scenario.sync();
+    },
+    runGame() {
+      this.buildScenario();
       this.game();
     },
     async game() {
       let turno = 0;
-      while (true) {
-        const angle = await this.$refs.prompt.ask("Angle");
-        const velocity = await this.$refs.prompt.ask("Velocity");
-        await this.lanzarBanana(
+      let exit = false;
+      while (!exit) {
+        const angle = await this.$refs.prompt.ask(
+          this.names[turno],
+          "Angle",
+          turno
+        );
+        const velocity = await this.$refs.prompt.ask(
+          this.names[turno],
+          "Velocity",
+          turno
+        );
+        exit = await this.lanzarBanana(
           this.gorillas[turno],
           angle,
           velocity,
@@ -273,10 +283,19 @@ export default {
       const pos = scenario.size[gorilla];
       const x0 = pos.x - pos.w * 0.5 * dir;
       const y0 = pos.y - pos.h * 0.5 - 8;
-      for (let t = 0; t < 20; t += 0.1) {
+      for (let t = 0; ; t += 0.1) {
         await this.nextTick();
         const x = x0 + t * vx;
         const y = y0 - (t * vy - 0.5 * g * t * t);
+        if (
+          (x > large + 16 && vx > 0) ||
+          (x < -16 && vx < 0) ||
+          y > floor ||
+          y < -floor
+        ) {
+          scenario.teleportSprite(this.banana, -16, -16);
+          break;
+        }
         // Detección de colisión
         let choco = false;
         let exploto = -1;
@@ -314,6 +333,7 @@ export default {
             this.map.explosion2b,
             this.map.explosion2End
           );
+          this.resetGame();
           break;
         } else if (choco) {
           await this.explotar(
@@ -329,6 +349,7 @@ export default {
           scenario.teleportSprite(this.banana, x, y);
         }
       }
+      return false;
     },
     async explotar(scenario, x, y, explo1, explo2, explo3) {
       let explosion = this.banana;
@@ -353,6 +374,13 @@ export default {
       return new Promise(resolve => {
         this.nextTickResolve = resolve;
       });
+    },
+    resetGame() {
+      this.$refs.scenario.reset();
+      this.edificios.splice(0);
+      this.gorillas.splice(0);
+      this.explosions.splice(0);
+      this.buildScenario();
     }
   }
 };

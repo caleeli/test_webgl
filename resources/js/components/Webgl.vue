@@ -5,7 +5,7 @@
 <script>
 const m4 = require("../globals/m4.js");
 import WebgGL from "../mixins/WebGL2";
-const txSize = 2;
+const txSize = 4;
 export default {
   mixins: [WebgGL],
   props: {
@@ -85,6 +85,16 @@ export default {
     };
   },
   methods: {
+    reset() {
+      this.j = 0;
+      this.attributes.a_position.splice(0);
+      this.attributes.a_texcoord.splice(0);
+      this.nextClockResolve.splice(0);
+      this.size.splice(0);
+      this.angle.splice(0);
+      this.sprites.splice(0);
+      this.sync();
+    },
     createSprites(
       count = 1,
       sprite,
@@ -273,7 +283,9 @@ export default {
         start: this.j,
         end:
           this.j +
-          Math.round((this.sprites[s].length -1) / (this.sprites[s][0].speed || 1))
+          Math.round(
+            (this.sprites[s].length - 1) / (this.sprites[s][0].speed || 1)
+          )
       };
     },
     getMatrix(x, y, w, h) {
