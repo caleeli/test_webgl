@@ -1,7 +1,9 @@
 <template>
   <div class="editor w-100 h-100">
-    <div class="position-relative" style="width:100%; height:100%;">
-      <img class="scenario" :src="world" style="width: 100%;" />
+    <div class="game position-relative" style="width:100%; height:100%;">
+      <div class="left-pad">
+        <div class="key" v-for="key in leftPad" :key="key" @click="pressPad(key)">{{ key }}</div>
+      </div>
       <scenario
         ref="scenario"
         class="scenario"
@@ -12,24 +14,46 @@
         :width="large"
         :height="floor"
         :map="map"
-        style="width:100%;"
+        style="background-size:100% auto;"
+        :style="{'background-image': `url(${world})`}"
       ></scenario>
-      <div class="left">{{ names[0] }}</div>
-      <div class="right">{{ names[1] }}</div>
-      <prompt ref="prompt" />
+      <div class="right-pad">
+        <div class="key" v-for="key in rightPad" :key="key" @click="pressPad(key)">{{ key }}</div>
+      </div>
+      <div class="left">
+        <div>{{ names[0] }}</div>
+        <div v-if="turno==0">Angle: {{ angle }}{{ currentVariable == 'angle' ? '_' : ''}}</div>
+        <div v-if="turno==0">Velocity: {{ velocity }}{{ currentVariable == 'velocity' ? '_' : ''}}</div>
+      </div>
+      <div class="right">
+        <div>{{ names[1] }}</div>
+        <div v-if="turno==1">Angle: {{ angle }}{{ currentVariable == 'angle' ? '_' : ''}}</div>
+        <div v-if="turno==1">Velocity: {{ velocity }}{{ currentVariable == 'velocity' ? '_' : ''}}</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-const floor = 480;
-const large = 720;
+import HasKeyPad from "../mixins/HasKeyPad";
+
+//const floor = 480; //768
+//const large = 720; //1024
+//most common cellphone resolution: 720x1280
+// espacio para el dedo gordo: 30% ==> anchos: escenario=854 + teclado=426  alto=720
+//const floor = 360; //720
+//const large = 428; //1024
+//Resolucion dos 9: 640x350
+const floor = 350; //720
+const large = 640; //1024
 
 export default {
   path: "/",
-  mixins: [window.workflowMixin],
+  mixins: [window.workflowMixin, HasKeyPad],
   data() {
     return {
+      angle: '',
+      velocity: '',
       large,
       floor,
       explosions: [],
@@ -233,7 +257,7 @@ export default {
       scenario.createSpriteBase(
         scenario.map.sol1,
         large * 0.5,
-        60,
+        40,
         scenario.map.sol1[0].w,
         scenario.map.sol1[0].h,
         0
@@ -255,14 +279,14 @@ export default {
       let turno = 0;
       let exit = false;
       while (!exit) {
-        const angle = await this.$refs.prompt.ask(
+        const angle = await this.ask(
           this.names[turno],
-          "Angle",
+          "angle",
           turno
         );
-        const velocity = await this.$refs.prompt.ask(
+        const velocity = await this.ask(
           this.names[turno],
-          "Velocity",
+          "velocity",
           turno
         );
         exit = await this.lanzarBanana(
@@ -272,6 +296,8 @@ export default {
           1 - turno * 2
         );
         turno = (turno + 1) % 2;
+        this.angle = '';
+        this.velocity = '';
       }
     },
     async lanzarBanana(gorilla, a, v, dir) {
@@ -386,25 +412,62 @@ export default {
 };
 </script>
 
-<style scoped>
-.scenario {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
+<style lang="scss" scoped>
+$sizew: calc((100% - 185.71428571428572vh) / 2);
+$sizef: calc((100vw - 185.71428571428572vh) / 7);
+$sizek: calc(100% - 1em);
+
 .editor {
   font-family: "PerfectDOSVGA437Win";
 }
 .left {
   position: absolute;
   top: 0em;
-  left: 1em;
+  left: $sizew;
   color: white;
 }
 .right {
   position: absolute;
   top: 0em;
-  right: 1em;
+  right: $sizew;
   color: white;
+  text-align: right;
+}
+.game {
+  display: flex;
+  width: 100%;
+  background-color: black;
+}
+@media (orientation: landscape) {
+  .game {
+    flex-direction: row;
+  }
+  .game .scenario {
+    height: 100%;
+    width: 185.71428571428572vh;
+  }
+  .game .left-pad {
+    width: $sizew;
+    text-align: center;
+  }
+  .game .key {
+    display: block;
+    font-size: $sizef;
+    background-color: blue;
+    color: white;
+    margin-top: 1em;
+    padding: 0.5em 0em;
+    width: $sizek;
+  }
+  .game .right-pad {
+    width: $sizew;
+    text-align: center;
+  }
+}
+
+@media (orientation: portrait) {
+  .game {
+    flex-direction: column;
+  }
 }
 </style>
