@@ -98,7 +98,7 @@ class Install extends Command
      */
     private function setEnv($name, $value)
     {
-        $config = file_get_contents('.env');
+        $config = file_exists('.env') ? file_get_contents('.env') : file_get_contents('.env.example');
         $newConfig = preg_replace('/^\s*' . preg_quote($name) . '\s*=.*$/m', "$name=$value", $config);
         file_put_contents('.env', $newConfig);
     }
